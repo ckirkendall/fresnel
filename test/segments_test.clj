@@ -39,24 +39,24 @@
 
 
 (deftest putback-tests
-  (testing "fetching using simple keyword"
+  (testing "putback using simple keyword"
     (let [data {:a "fail"}]
       (is (= {:a "success"} (putback data :a "success")))))
-  (testing "fetching using a string"
+  (testing "putback using a string"
     (let [data {"a" "fail"}]
       (is (= {"a" "success"} (putback data "a" "success")))))
-  (testing "fetching using a string"
+  (testing "putback using a string"
     (let [data {'a "fail"}]
       (is (= {'a "success"} (putback data 'a "success")))))
-  (testing "fetching using a number"
+  (testing "putback using a number"
     (let [data ["a" "fail" "c"]]
       (is (= ["a" "b" "c"] (putback data 1 "b")))))
-  (testing "fetching using a custom segment"
+  (testing "putback using a custom segment"
     (let [seg (create-segment (fn [_ data] (nth data 1))
                               (fn [_ data nval] (assoc data 1 nval)))
           data ["a" "fail" "c"]]
       (is (= ["a" "b" "c"] (putback data seg "b")))))
-  (testing "fetching using a complex segement"
+  (testing "putback using a complex segement"
     (let [data "a,b,c"]
       (is (= "a,b,c,d"
              (putback data
@@ -77,3 +77,15 @@
       (is (= true (fetch-in data [:a 1 comma-to-map "b"])))
       (is (= nil (fetch-in data [:a 1 comma-to-map "d"]))))))
 
+
+(deftest putback-in-tests
+  (testing "basic compond map with keys"
+    (let [data {:a {:b {"c" 1 :d 2} 'e 3} :f [1 2 3 4]}]
+      (is (= {:a {:b {"c" 1 :d 2} 'e 3} :f [1 2 5 4]}
+             (putback-in data [:f 2] 5)))
+      (is (= {:a {:b {"c" 1 :d 5} 'e 3} :f [1 2 3 4]}
+             (putback-in data [:a :b :d] 5)))))
+  (testing "compond map with complex segment"
+    (let [data {:a ["x,y,z" "a,b,c"]}]
+      (is (= {:a ["x,y,z" "a,c"]}
+             (putback-in data [:a 1 comma-to-map "b"] false))))))
