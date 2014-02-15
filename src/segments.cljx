@@ -58,8 +58,8 @@
   (reduce fetch obj path))
 
 
-(defn putback-in [obj value [seg & path]]
+(defn putback-in [obj [seg & path] value]
   (when (and obj seg)
     (if (empty? path)
       (putback obj seg value)
-      (putback obj seg (putback-in (fetch obj seg) value path)))))
+      (putback obj seg (putback-in (fetch obj seg) path value)))))
