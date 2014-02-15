@@ -45,6 +45,7 @@
                           (assoc m k (case k
                                        :fetch `(fn [_# ~value-arg] ~v)
                                        :putback `(fn [_# ~value-arg ~subvalue-arg] ~v))))
+                        {}
                         (partition 2 methods))
         f `(fn [~@plain-args ~@(when plain-rest-arg `[& ~plain-rest-arg])]
              (let [~@(interleave args plain-args)
