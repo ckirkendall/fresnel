@@ -1,14 +1,23 @@
-# segments
+# Segments
 
-A Clojure library designed to ... well, that part is up to you.
+A library for composing lenses and working with complex state objects.  This library is a paired down version lens code embeded in Christophe Grand's Eliven. 
 
-## Usage
 
-FIXME
+## Artifact
 
+All artifacts are published to [clojars](https://clojars.org/segments). Latest version is `0.1.0`:
+
+```
+[segments "0.1.0"]
+```
+
+## Concepts
+ 
+TBD
+ 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014 Creighton Kirkendall
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
