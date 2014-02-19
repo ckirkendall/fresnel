@@ -9,20 +9,27 @@
 
 (defn putback [value seg subvalue]
   (-putback seg value subvalue))
+  
 
-(def base-extend-list [clojure.lang.Keyword 
-                       #+clj clojure.lang.Symbol 
-                       #+cljs string
-                       #+clj String])  
+(extend-type #+clj clojure.lang.Keyword #+cljs cljs.core.Keyword
+    Segment
+    (-fetch [seg value] (get value seg))
+    (-putback [seg value subval] (assoc value seg subval)))
 
-(doseq [t base-extend-list]
-  (extend t
-    Segment {:-fetch #(get %2 %1)
-             :-putback #(assoc %2 %1 %3)}))
+(extend-type #+clj clojure.lang.Symbol #+cljs cljs.core.Symbol
+    Segment
+    (-fetch [seg value] (get value seg))
+    (-putback [seg value subval] (assoc value seg subval)))
 
-(extend Number
-  Segment {:-fetch #(nth %2 %1)
-           :-putback #(assoc %2 %1 %3)})
+(extend-type #+clj String #+cljs string
+    Segment
+    (-fetch [seg value] (get value seg))
+    (-putback [seg value subval] (assoc value seg subval)))
+
+(extend-type #+clj Number #+cljs number
+  Segment
+  (-fetch [seg value] (nth value seg))
+  (-putback [seg value subval] (assoc value seg subval)))
 
 
 (defn create-segment [fetch putback]
@@ -50,7 +57,7 @@
         f `(fn [~@plain-args ~@(when plain-rest-arg `[& ~plain-rest-arg])]
              (let [~@(interleave args plain-args)
                    ~@(when plain-rest-arg [rest-arg plain-rest-arg])]
-               (create-segment ~(:fetch methods) ~(:putback methods) )))]
+               (segments/create-segment ~(:fetch methods) ~(:putback methods) )))]
     `(def ~name ~(if auto-segment (list f) f))))
 
 
