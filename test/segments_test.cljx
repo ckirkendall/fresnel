@@ -1,8 +1,13 @@
 (ns segments-test
-  (:use clojure.test)
-  (:require [segments :refer [defsegment Segment putback-in
-                              fetch-in fetch putback create-segment]]
-            [clojure.string :refer [split]]))
+  #+clj (:use clojure.test)
+  (:require [segments :refer [#+clj defsegment
+                              Segment putback-in fetch-in fetch
+                              putback create-segment]]
+            [clojure.string :refer [split]]
+            #+cljs [cemerick.cljs.test :as t])
+  #+cljs (:require-macros [cemerick.cljs.test
+                           :refer [is deftest testing are]]
+                          [segments :refer [defsegment]]))
 
 (defsegment comma-to-map [oval nval]
   :fetch 
@@ -57,11 +62,12 @@
           data ["a" "fail" "c"]]
       (is (= ["a" "b" "c"] (putback data seg "b")))))
   (testing "putback using a complex segement"
-    (let [data "a,b,c"]
-      (is (= "a,b,c,d"
-             (putback data
-                      comma-to-map
-                      (assoc (fetch data comma-to-map) "d" true)))))))
+    (let [data "a,b,c"
+          res (putback data
+                           comma-to-map
+                           (assoc (fetch data comma-to-map) "d" true))]
+      (is (or  (= "a,b,c,d" res)
+               (= "d,c,b,a" res))))))
 
 
 (deftest fetch-in-tests
@@ -86,6 +92,7 @@
       (is (= {:a {:b {"c" 1 :d 5} 'e 3} :f [1 2 3 4]}
              (putback-in data [:a :b :d] 5)))))
   (testing "compond map with complex segment"
-    (let [data {:a ["x,y,z" "a,b,c"]}]
-      (is (= {:a ["x,y,z" "a,c"]}
-             (putback-in data [:a 1 comma-to-map "b"] false))))))
+    (let [data {:a ["x,y,z" "a,b,c"]}
+          res (putback-in data [:a 1 comma-to-map "b"] false)]
+      (is (or (= {:a ["x,y,z" "a,c"]} res)
+              (= {:a ["x,y,z" "c,a"]} res))))))
