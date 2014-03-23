@@ -2,7 +2,7 @@
   #+clj (:use clojure.test)
   (:require [segments :refer [#+clj defsegment
                               Segment putback-in fetch-in fetch
-                              putback create-segment]]
+                              putback create-segment slice]]
             [clojure.string :refer [split]]
             #+cljs [cemerick.cljs.test :as t])
   #+cljs (:require-macros [cemerick.cljs.test
@@ -40,7 +40,11 @@
       (is (= {"a" true
               "b" true
               "c" true}
-             (fetch data comma-to-map))))))
+             (fetch data comma-to-map)))))
+  (testing "fetching using slice segment"
+    (let [data [:a :b :c :d :e :f]]
+      (is (= '(:c :d)
+             (fetch data (slice 2 4)))))))
 
 
 (deftest putback-tests
@@ -67,7 +71,11 @@
                            comma-to-map
                            (assoc (fetch data comma-to-map) "d" true))]
       (is (or  (= "a,b,c,d" res)
-               (= "d,c,b,a" res))))))
+               (= "d,c,b,a" res)))))
+  (testing "fetching using slice segment"
+    (let [data [:a :b :c :d :e :f]]
+      (is (= '(:a :b :t :t :t :e :f)
+             (putback data (slice 2 4) [:t :t :t]))))))
 
 
 (deftest fetch-in-tests

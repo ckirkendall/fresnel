@@ -31,12 +31,32 @@
   (-fetch [seg value] (nth value seg))
   (-putback [seg value subval] (assoc value seg subval)))
 
+(defn- bound [mn n mx]
+  (-> n (max mn) (min mx)))
+
+(defn spliceable? [x]
+  (or (nil? x) (sequential? x)))
+
+(defrecord Slice [from to]
+  Segment 
+  (-fetch [seg x]
+    (let [n (count x)]
+      (subvec x (bound 0 from n) (bound 0 to n))))
+  (-putback [seg x v]
+    (let [n (count x)]
+      (-> x 
+        (subvec 0 (bound 0 from n))
+        (into (if (spliceable? v) v (list v)))
+        (into (subvec x (bound 0 to n) n))))))
+
+(defn slice [from to] (Slice. from to))
+
+(defn slice? [seg] (instance? Slice seg))
 
 (defn create-segment [fetch putback]
   (reify Segment
     (-fetch [seg value] (fetch seg value))
     (-putback [seg value subvalue] (putback seg value subvalue))))
-
 
 (defmacro defsegment [name doc? initial-args & methods]
   (let [[name initial-args methods] (if (string? doc?)
