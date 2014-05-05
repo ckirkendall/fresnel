@@ -10,7 +10,7 @@
 
 (defn lens [x]
   (if (satisfies? Lens x) x
-    (throw (IllegalArgumentException.
+    (throw (#+clj IllegalArgumentException. #+cljs js/Error
             (str "Don't know how to create a lens from: " x)))))
 
 
