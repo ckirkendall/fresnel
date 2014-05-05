@@ -1,4 +1,4 @@
-(defproject fresnel "0.2.2-SNAPSHOT"
+(defproject fresnel "0.2.3-SNAPSHOT"
   :description "A library for composing lenses and working with complex state objects"
   :url "https://github.com/ckirkendall/fresnel"
   :license {:name "Eclipse Public License"
