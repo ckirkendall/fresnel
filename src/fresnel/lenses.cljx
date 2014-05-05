@@ -41,7 +41,7 @@
     (-fetch [seg value] (nth value seg))
     (-putback [seg value subval] (assoc value seg subval)))
 
-(extend-type #+clj clojure.lang.PersistentVector #+cljs cljs.core/PersistantVector
+(extend-type #+clj clojure.lang.PersistentVector #+cljs cljs.core/PersistentVector
     Lens
     (-fetch [seg value] (fetch-in value seg))
     (-putback [seg value subval] (putback-in value seg subval)))
