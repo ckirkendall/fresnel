@@ -1,4 +1,4 @@
-# Fresnel (formerly known as Segments) 
+# Fresnel 
 
 A library for composing lenses and working with complex state objects.  This library is a paired down version lens code embeded in Christophe Grand's Eliven. 
 
