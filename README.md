@@ -7,11 +7,7 @@ A library for composing lenses and working with complex state objects.  This lib
 
 All artifacts are published to [clojars](https://clojars.org/segments). Latest version is `0.1.0`:
 
-```
-[fresnel "0.2.0-SNAPSHOT"] 
-
-[segments "0.1.0"] ;stable
-```
+[![Clojars Project](http://clojars.org/fresnel/latest-version.svg)](http://clojars.org/fresnel)
 
 ## Concepts
  
