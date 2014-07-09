@@ -5,7 +5,7 @@ A library for composing lenses and working with complex state objects.  This lib
 
 ## Artifact
 
-All artifacts are published to [clojars](https://clojars.org/segments). Latest version is `0.1.0`:
+All artifacts are published to [clojars](https://clojars.org/segments).
 
 [![Clojars Project](http://clojars.org/fresnel/latest-version.svg)](http://clojars.org/fresnel)
 
