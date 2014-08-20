@@ -108,7 +108,7 @@
 
 
 (defn putback-in [obj [seg & path] value]
-  (when (and obj seg)
+  (when seg
     (if (empty? path)
       (putback obj seg value)
       (putback obj seg (putback-in (fetch obj seg) path value)))))
