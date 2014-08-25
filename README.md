@@ -11,7 +11,7 @@ All artifacts are published to [clojars](https://clojars.org/segments).
 
 ## Concepts
  
-The concept of a lens is very simple.  A lens consist of two method; one that transforms the state object into desired form and one that takes a transform object and pushes its state back into the main state object.  Fresnel provides a mechanism to define lenses and to compose them.  Fesnel builds on the concepts that aready existing in clojure.  In clojure we see two types of lenses for associative structures.  The first is the keyword and we use get and assoc as the transform functions.  The other is composition of these lenses in the form of a vector.  We use get-in and assoc-in as transform functions in this case.  Fresnel extends this concept beyond associative structions and unifies the access mentods under a single protocol Lens.
+The concept of a lens is very simple.  A lens consists of two methods; one that transforms the state object into desired form and one that takes a transform object and pushes its state back into the main state object.  Fresnel provides a mechanism to define lenses and to compose them.  Fesnel builds on the concepts that aready existing in Clojure.  In Clojure we see two types of lenses for associative structures.  The first is the keyword and we use get and assoc as the transform functions.  The other is composition of these lenses in the form of a vector.  We use get-in and assoc-in as transform functions in this case.  Fresnel extends this concept beyond associative structions and unifies the access methods under a single protocol Lens.
 
 ```clj
 (def state {:a {:aa "a1,b1,c1"
