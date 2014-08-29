@@ -21,6 +21,24 @@
   (-putback (lens seg) value subvalue))
   
 
+(defn safe-nth [value seg]
+  (if (vector? value)
+    (get value seg)
+    (loop [idx 0 val value]
+      (if (or (empty? val) (>= idx seg))
+        (first val)
+        (recur (inc idx) (rest val))))))
+
+(defn safe-num-assoc [value seg sub-val]
+  (if (vector? value)
+    (assoc value seg sub-val)
+    (loop [idx 0 val value accum []]
+      (cond
+       (>= idx seg) (concat (conj accum sub-val) (rest val))
+       (empty? val) (recur (inc idx) val (conj accum nil))
+       :else (recur (inc idx) (rest val) (conj accum (first val)))))))
+
+
 (extend-type #+clj clojure.lang.Keyword #+cljs cljs.core.Keyword
     Lens
     (-fetch [seg value] (get value seg))
@@ -38,8 +56,8 @@
 
 (extend-type #+clj Number #+cljs number
     Lens
-    (-fetch [seg value] (nth value seg))
-    (-putback [seg value subval] (assoc value seg subval)))
+    (-fetch [seg value] (safe-nth value seg))
+    (-putback [seg value subval] (safe-num-assoc value seg subval)))
 
 (extend-type #+clj clojure.lang.PersistentVector #+cljs cljs.core/PersistentVector
     Lens

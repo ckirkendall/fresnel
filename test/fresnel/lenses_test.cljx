@@ -26,8 +26,11 @@
   (testing "fetching using a string"
     (let [data {'a "success"}]
       (is (= "success" (fetch data 'a)))))
-  (testing "fetching using a number"
+  (testing "fetching using a number on a vector"
     (let [data ["a" "b" "c"]]
+      (is (= "b" (fetch data 1)))))
+  (testing "fetching using a number on a list"
+    (let [data '("a" "b" "c")]
       (is (= "b" (fetch data 1)))))
   (testing "fetching using a simple custom segment"
     (let [seg (create-lens (fn [_ data] (nth data 1))
@@ -56,10 +59,12 @@
   (testing "putback using a string"
     (let [data {'a "fail"}]
       (is (= {'a "success"} (putback data 'a "success")))))
-  (testing "putback using a number"
+  (testing "putback using a number on a vector"
     (let [data ["a" "fail" "c"]]
       (is (= ["a" "b" "c"] (putback data 1 "b")))))
-  (testing "putback using a custom segment"
+  (testing "putback using a number on a list"
+    (let [data '("a" "fail" "c")]
+      (is (= '("a" "b" "c") (putback data 1 "b")))))  (testing "putback using a custom segment"
     (let [seg (create-lens (fn [_ data] (nth data 1))
                            (fn [_ data nval] (assoc data 1 nval)))
           data ["a" "fail" "c"]]
