@@ -143,14 +143,14 @@
                                       [(vary-meta name assoc :doc doc?) initial-args methods]
                                       [name doc? (cons initial-args methods)])
         [value-arg & args] initial-args]
-    `(deflens ~name [~value-arg nil ~@args] :fetch (do ~@methods))))
+    `(deflens ~name [~value-arg nil ~@args] :fetch ((fn [] ~@methods)))))
 
 
 (defmacro defputback [name doc? initial-args & methods]
   (let [[name initial-args methods] (if (string? doc?)
                                       [(vary-meta name assoc :doc doc?) initial-args methods]
                                       [name doc? (cons initial-args methods)])]
-       `(deflens ~name ~initial-args :putback (do ~@methods))))
+    `(deflens ~name ~initial-args :putback ((fn [] ~@methods)))))
 
 
 (defmacro deflens [name doc? initial-args & methods]
