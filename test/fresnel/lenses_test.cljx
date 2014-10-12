@@ -1,12 +1,12 @@
 (ns fresnel.lenses-test
   #+clj (:use clojure.test)
-  (:require [fresnel.lenses :refer [#+clj deflens fetch
-                                    putback create-lens slice]]
+  (:require [fresnel.lenses :refer [#+clj deflens #+clj deffetch #+clj defputback 
+                                    IFetch IPutback fetch putback create-lens slice]]
             [clojure.string :refer [split]]
             #+cljs [cemerick.cljs.test :as t])
   #+cljs (:require-macros [cemerick.cljs.test
                            :refer [is deftest testing are]]
-                          [fresnel.lenses :refer [deflens]]))
+                          [fresnel.lenses :refer [deflens deffetch defputback]]))
 
 (deflens comma-to-map [oval nval]
   :fetch 
@@ -108,3 +108,21 @@
           res (putback data [:a 1 comma-to-map "b"] false)]
       (is (or (= {:a ["x,y,z" "a,c"]} res)
               (= {:a ["x,y,z" "c,a"]} res))))))
+
+
+(deffetch fetch-tmp [val]
+  val)
+
+(deftest deffetch-tests
+  (testing "a deffetch reifies IFetch"
+    (is (satisfies? IFetch fetch-tmp))
+    (is (= (fetch 3 fetch-tmp) 3))))
+
+
+(defputback putback-tmp [oval nval]
+  (conj oval nval))
+
+(deftest defputback-tests
+  (testing "a defputback reifies IFetch"
+    (is (satisfies? IPutback putback-tmp))
+    (is (= (putback [] putback-tmp 3) [3]))))
