@@ -138,6 +138,21 @@
    (create-putback-lens putback-fn)))
 
 
+(defmacro deffetch [name doc? initial-args & methods]
+  (let [name initial-args methods] (if (string? doc?)
+                                      [(vary-meta name assoc :doc doc?) initial-args methods]
+                                      [name doc? (cons initial-args methods)])
+       [value-arg & args] initial-args
+       `(deflens ~name [~value-arg nil ~@args] :fetch ~@methods)))
+
+
+(defmacro defputback [name doc? initial-args & methods]
+  (let [name initial-args methods] (if (string? doc?)
+                                      [(vary-meta name assoc :doc doc?) initial-args methods]
+                                      [name doc? (cons initial-args methods)])
+       `(deflens ~name ~initial-args :putback ~@methods)))
+
+
 (defmacro deflens [name doc? initial-args & methods]
   (let [[name initial-args methods] (if (string? doc?)
                                       [(vary-meta name assoc :doc doc?) initial-args methods]
@@ -147,13 +162,13 @@
         [args [_ & rest-arg]] (split-with #(not= (clojure.core/name %) "&") args)
         plain-args (take (count args) (repeatedly gensym))
         plain-rest-arg (when rest-arg (gensym))
-        fetch-expr (some (fn [[name expr]] (case name :fetch expr nil)) (partition 2 methods))
         methods (reduce (fn [m [k v]]
                           (assoc m k (case k
                                        :fetch `(fn [_# ~value-arg] ~v)
                                        :putback `(fn [_# ~value-arg ~subvalue-arg] ~v))))
                         {}
                         (partition 2 methods))
+        
         f `(fn [~@plain-args ~@(when plain-rest-arg `[& ~plain-rest-arg])]
              (let [~@(interleave args plain-args)
                    ~@(when plain-rest-arg [rest-arg plain-rest-arg])]
