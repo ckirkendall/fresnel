@@ -104,12 +104,39 @@
 
 (defn slice? [seg] (instance? Slice seg))
 
-(defn create-lens [fetch putback]
+
+(defn create-fetch-lens [fetch-fn]
   (reify
     IFetch
-    (-fetch [seg value] (fetch seg value))
+    (-fetch [seg value] (fetch-fn seg value))))
+
+
+(defn create-putback-lens [putback-fn]
+  (reify
     IPutback
-    (-putback [seg value subvalue] (putback seg value subvalue))))
+    (-putback [seg value subvalue] (putback-fn seg value subvalue))))
+
+
+(defn create-bi-lens [fetch-fn putback-fn]
+  (reify
+    IFetch
+    (-fetch [seg value] (fetch-fn seg value))
+    IPutback
+    (-putback [seg value subvalue] (putback-fn seg value subvalue))))
+
+
+(defn create-lens [fetch-fn putback-fn]
+  {:pre [(or fetch putback)]}
+  (cond
+   (and fetch-fn putback-fn)
+   (create-bi-lens fetch-fn putback-fn)
+
+   fetch-fn
+   (create-fetch-lens fetch-fn)
+
+   putback-fn
+   (create-putback-lens putback-fn)))
+
 
 (defmacro deflens [name doc? initial-args & methods]
   (let [[name initial-args methods] (if (string? doc?)
