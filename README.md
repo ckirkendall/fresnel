@@ -9,7 +9,9 @@ All artifacts are published to [clojars](https://clojars.org/fresnel).
 
 [![Clojars Project](http://clojars.org/fresnel/latest-version.svg)](http://clojars.org/fresnel)
 
-### Note: Breaking changes coming in 0.3.0
+### Note: Breaking changes in 0.3.0-SNAPSHOT
+ 
+If you reified the Lens protocol directly you will have to now reify IFetch and IPutback protocols.  
 
 ## Concepts
  

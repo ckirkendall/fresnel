@@ -1,6 +1,6 @@
 (ns fresnel.lenses-test
   #+clj (:use clojure.test)
-  (:require [fresnel.lenses :refer [#+clj deflens Lens fetch
+  (:require [fresnel.lenses :refer [#+clj deflens fetch
                                     putback create-lens slice]]
             [clojure.string :refer [split]]
             #+cljs [cemerick.cljs.test :as t])

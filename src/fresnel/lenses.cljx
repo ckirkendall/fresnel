@@ -2,24 +2,29 @@
 
 (declare fetch-in putback-in)
 
-(defprotocol Lens
-  (-fetch [seg value])
+(defprotocol IFetch
+  (-fetch [seg value]))
+
+(defprotocol IPutback
   (-putback [seg value subvalue]))
 
 
+(defn fetch-lens [x]
+  (if (satisfies? IFetch x) x
+      (throw (#+clj IllegalArgumentException. #+cljs js/Error
+                    (str "Lens does not satisfy IFetch protocol: " (pr-str x))))))
 
-(defn lens [x]
-  (if (satisfies? Lens x) x
-    (throw (#+clj IllegalArgumentException. #+cljs js/Error
-            (str "Don't know how to create a lens from: " x)))))
-
+(defn putback-lens [x]
+  (if (satisfies? IPutback x) x
+      (throw (#+clj IllegalArgumentException. #+cljs js/Error
+                    (str "Lens does not satisfy IPutback protocol: " (pr-str x))))))
 
 (defn fetch [value seg]
-  (-fetch (lens seg) value))
+  (-fetch (fetch-lens seg) value))
 
 (defn putback [value seg subvalue]
-  (-putback (lens seg) value subvalue))
-  
+  (-putback (putback-lens seg) value subvalue))
+
 
 (defn safe-nth [value seg]
   (if (vector? value)
@@ -40,33 +45,39 @@
 
 
 (extend-type #+clj clojure.lang.Keyword #+cljs cljs.core.Keyword
-    Lens
+    IFetch
     (-fetch [seg value] (get value seg))
+    IPutback
     (-putback [seg value subval] (assoc value seg subval)))
 
 (extend-type #+clj clojure.lang.Symbol #+cljs cljs.core.Symbol
-    Lens
+    IFetch
     (-fetch [seg value] (get value seg))
+    IPutback
     (-putback [seg value subval] (assoc value seg subval)))
 
 (extend-type #+clj String #+cljs string
-    Lens
+    IFetch
     (-fetch [seg value] (get value seg))
+    IPutback
     (-putback [seg value subval] (assoc value seg subval)))
 
 (extend-type #+clj Number #+cljs number
-    Lens
+    IFetch
     (-fetch [seg value] (safe-nth value seg))
+    IPutback
     (-putback [seg value subval] (safe-num-assoc value seg subval)))
 
 (extend-type #+clj clojure.lang.PersistentVector #+cljs cljs.core/PersistentVector
-    Lens
+    IFetch
     (-fetch [seg value] (fetch-in value seg))
+    IPutback
     (-putback [seg value subval] (putback-in value seg subval)))
 
 (extend-type #+clj clojure.lang.PersistentList #+cljs cljs.core/List
-    Lens
+    IFetch
     (-fetch [seg value] (fetch-in value seg))
+    IPutback
     (-putback [seg value subval] (putback-in value seg subval)))
 
 
@@ -77,10 +88,11 @@
   (or (nil? x) (sequential? x)))
 
 (defrecord Slice [from to]
-  Lens 
+  IFetch
   (-fetch [seg x]
     (let [n (count x)]
       (subvec x (bound 0 from n) (bound 0 to n))))
+  IPutback
   (-putback [seg x v]
     (let [n (count x)]
       (-> x 
@@ -93,8 +105,10 @@
 (defn slice? [seg] (instance? Slice seg))
 
 (defn create-lens [fetch putback]
-  (reify Lens
+  (reify
+    IFetch
     (-fetch [seg value] (fetch seg value))
+    IPutback
     (-putback [seg value subvalue] (putback seg value subvalue))))
 
 (defmacro deflens [name doc? initial-args & methods]
