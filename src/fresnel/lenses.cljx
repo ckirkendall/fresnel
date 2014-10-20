@@ -9,6 +9,12 @@
   (-putback [seg value subvalue]))
 
 
+(defn bi-lens [x]
+  (if (and (fetch-lens x)
+           (putback-lens x))
+    x))
+
+
 (defn fetch-lens [x]
   (if (satisfies? IFetch x) x
       (throw (#+clj IllegalArgumentException. #+cljs js/Error
