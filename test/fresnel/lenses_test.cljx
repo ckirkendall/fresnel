@@ -1,7 +1,9 @@
 (ns fresnel.lenses-test
+  (:refer-clojure :exclude [key])
   #+clj (:use clojure.test)
   (:require [fresnel.lenses :refer [#+clj deflens #+clj deffetch #+clj defputback
-                                    IFetch IPutback fetch putback create-lens slice]]
+                                    IFetch IPutback fetch putback create-lens slice
+                                    key]]
             [clojure.string :refer [split]]
             #+cljs [cemerick.cljs.test :as t])
   #+cljs (:require-macros [cemerick.cljs.test
@@ -151,4 +153,14 @@
   (is (= 2 (fetch {:foo {:bar 2}} [:foo :bar])))
   (is (= 1 (fetch [{:foo 1}, {:foo 2}] [0 :foo])))
   (is (= 4 (fetch [{:foo 1 :bar [{:baz 1}, {:buzz 2}]}, {:foo 3 :bar [{:baz 3}, {:buzz 4}]}]
-                       [1 :bar 1 :buzz]))))))
+                  [1 :bar 1 :buzz]))))))
+
+
+(deftest complex-keys-test
+  (testing "making sure the complex key can be created with key function"
+    (is (= {:a :b}
+           (fetch {[0 1] {:a :b}} [(key [0 1])])))
+    (is (= {[0 1] {:a :c}}
+           (putback {[0 1] {:a :b}} [(key [0 1]) :a] :c)))
+    (is (= {[0 1] {:a :c}}
+           (putback {} [(key [0 1]) :a] :c)))))

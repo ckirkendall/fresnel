@@ -1,4 +1,5 @@
-(ns fresnel.lenses)
+(ns fresnel.lenses
+  (:refer-clojure :exclude [key]))
 
 (declare fetch-in putback-in)
 
@@ -7,12 +8,6 @@
 
 (defprotocol IPutback
   (-putback [seg value subvalue]))
-
-
-(defn bi-lens [x]
-  (if (and (fetch-lens x)
-           (putback-lens x))
-    x))
 
 
 (defn fetch-lens [x]
@@ -24,6 +19,11 @@
   (if (satisfies? IPutback x) x
       (throw (#+clj IllegalArgumentException. #+cljs js/Error
                     (str "Lens does not satisfy IPutback protocol: " (pr-str x))))))
+
+(defn bi-lens [x]
+  (if (and (fetch-lens x)
+           (putback-lens x))
+    x))
 
 (defn fetch [value seg]
   (-fetch (fetch-lens seg) value))
@@ -94,6 +94,14 @@
     IPutback
     (-putback [seg value subval] (putback-in value seg subval)))
 
+(defn key [ky]
+  (reify
+    IFetch
+    (-fetch [seg value] (get value ky))
+    IPutback
+    (-putback [seg value subval]
+      (let [val (if (nil? value) {} value)]
+        (assoc val ky subval)))))
 
 (defn- bound [mn n mx]
   (-> n (max mn) (min mx)))
