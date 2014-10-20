@@ -1,6 +1,6 @@
 (ns fresnel.lenses-test
   #+clj (:use clojure.test)
-  (:require [fresnel.lenses :refer [#+clj deflens #+clj deffetch #+clj defputback 
+  (:require [fresnel.lenses :refer [#+clj deflens #+clj deffetch #+clj defputback
                                     IFetch IPutback fetch putback create-lens slice]]
             [clojure.string :refer [split]]
             #+cljs [cemerick.cljs.test :as t])
@@ -9,7 +9,7 @@
                           [fresnel.lenses :refer [deflens deffetch defputback]]))
 
 (deflens comma-to-map [oval nval]
-  :fetch 
+  :fetch
      (reduce #(assoc %1 (.trim %2) true) {} (split oval #","))
   :putback
   (reduce #(if %1 (str %2 "," %1) %2)
@@ -126,3 +126,29 @@
   (testing "a defputback reifies IFetch"
     (is (satisfies? IPutback putback-tmp))
     (is (= (putback [] putback-tmp 3) [3]))))
+
+
+(deftest assoc-in-compatibility-test
+(let [state {:a {:b :c}}]
+  (testing "basic compatibility with assoc-in and get-in"
+  ;; assoc-in
+  (is (= {:foo {:bar {:baz 100}}}
+             (putback {:foo {:bar {:baz 0}}} [:foo :bar :baz] 100)))
+  (is (= {:foo 1 :bar 2 :baz 100}
+             (putback {:foo 1 :bar 2 :baz 3} [:baz] 100)))
+  (is (= [{:foo [{:bar 2} {:baz 3}]} {:foo [{:bar 2} {:baz 100}]}]
+             (putback [{:foo [{:bar 2} {:baz 3}]}, {:foo [{:bar 2} {:baz 3}]}]
+                       [1 :foo 1 :baz] 100)))
+  (is (= [{:foo 1, :bar 2} {:foo 1, :bar 100}]
+         (putback [{:foo 1 :bar 2}, {:foo 1 :bar 2}] [1 :bar] 100)))
+  #+clj (is (thrown? IndexOutOfBoundsException (putback [] [1 :bar] 100)))
+  #+cljs (is (thrown? js/Error (putback [] [1 :bar] 100)))
+  (is (= {:bar {:foo 100}}
+         (putback nil [:bar :foo] 100)))
+
+  ;; get-in
+  (is (= 1 (fetch {:foo 1 :bar 2} [:foo])))
+  (is (= 2 (fetch {:foo {:bar 2}} [:foo :bar])))
+  (is (= 1 (fetch [{:foo 1}, {:foo 2}] [0 :foo])))
+  (is (= 4 (fetch [{:foo 1 :bar [{:baz 1}, {:buzz 2}]}, {:foo 3 :bar [{:baz 3}, {:buzz 4}]}]
+                       [1 :bar 1 :buzz]))))))

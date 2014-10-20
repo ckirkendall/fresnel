@@ -48,25 +48,33 @@
     IFetch
     (-fetch [seg value] (get value seg))
     IPutback
-    (-putback [seg value subval] (assoc value seg subval)))
+    (-putback [seg value subval]
+      (let [val (if (nil? value) {} value)]
+        (assoc val seg subval))))
 
 (extend-type #+clj clojure.lang.Symbol #+cljs cljs.core.Symbol
     IFetch
     (-fetch [seg value] (get value seg))
     IPutback
-    (-putback [seg value subval] (assoc value seg subval)))
+    (-putback [seg value subval]
+      (let [val (if (nil? value) {} value)]
+        (assoc val seg subval))))
 
 (extend-type #+clj String #+cljs string
     IFetch
     (-fetch [seg value] (get value seg))
     IPutback
-    (-putback [seg value subval] (assoc value seg subval)))
+    (-putback [seg value subval]
+      (let [val (if (nil? value) {} value)]
+        (assoc val seg subval))))
 
 (extend-type #+clj Number #+cljs number
     IFetch
     (-fetch [seg value] (safe-nth value seg))
     IPutback
-    (-putback [seg value subval] (safe-num-assoc value seg subval)))
+    (-putback [seg value subval]
+      (let [val (if (nil? value) {} value)]
+        (safe-num-assoc value seg subval))))
 
 (extend-type #+clj clojure.lang.PersistentVector #+cljs cljs.core/PersistentVector
     IFetch
@@ -95,7 +103,7 @@
   IPutback
   (-putback [seg x v]
     (let [n (count x)]
-      (-> x 
+      (-> x
         (subvec 0 (bound 0 from n))
         (into (if (spliceable? v) v (list v)))
         (into (subvec x (bound 0 to n) n))))))
@@ -168,7 +176,7 @@
                                        :putback `(fn [_# ~value-arg ~subvalue-arg] ~v))))
                         {}
                         (partition 2 methods))
-        
+
         f `(fn [~@plain-args ~@(when plain-rest-arg `[& ~plain-rest-arg])]
              (let [~@(interleave args plain-args)
                    ~@(when plain-rest-arg [rest-arg plain-rest-arg])]
@@ -186,4 +194,3 @@
     (if (empty? path)
       (putback obj seg value)
       (putback obj seg (putback-in (fetch obj seg) path value)))))
-
