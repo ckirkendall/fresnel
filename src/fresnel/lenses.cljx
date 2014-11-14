@@ -32,6 +32,18 @@
   (-putback (putback-lens seg) value subvalue))
 
 
+;; This is used to dissoc a key in an associtive structure.
+;; if used as the value of putback it will trigger a
+;; dissoc on the seg.
+(def dissoc-trigger :fresnel/dissoc)
+
+
+(defn safe-assoc [value seg sub-val]
+  (if (identical? sub-val dissoc-trigger)
+    (dissoc value seg)
+    (assoc value seg sub-val)))
+
+
 (defn safe-nth [value seg]
   (if (vector? value)
     (get value seg)
@@ -40,14 +52,22 @@
         (first val)
         (recur (inc idx) (rest val))))))
 
+
 (defn safe-num-assoc [value seg sub-val]
-  (if (vector? value)
+  (cond
+    (vector? value)
     (assoc value seg sub-val)
+
+    (map? value)
+    (safe-assoc value seg sub-val)
+
+    :else ;seq
     (loop [idx 0 val value accum []]
       (cond
        (>= idx seg) (concat (conj accum sub-val) (rest val))
        (empty? val) (recur (inc idx) val (conj accum nil))
        :else (recur (inc idx) (rest val) (conj accum (first val)))))))
+
 
 
 (extend-type #+clj clojure.lang.Keyword #+cljs cljs.core.Keyword
@@ -56,7 +76,7 @@
     IPutback
     (-putback [seg value subval]
       (let [val (if (nil? value) {} value)]
-        (assoc val seg subval))))
+        (safe-assoc val seg subval))))
 
 (extend-type #+clj clojure.lang.Symbol #+cljs cljs.core.Symbol
     IFetch
@@ -64,7 +84,7 @@
     IPutback
     (-putback [seg value subval]
       (let [val (if (nil? value) {} value)]
-        (assoc val seg subval))))
+        (safe-assoc val seg subval))))
 
 (extend-type #+clj String #+cljs string
     IFetch
@@ -72,7 +92,7 @@
     IPutback
     (-putback [seg value subval]
       (let [val (if (nil? value) {} value)]
-        (assoc val seg subval))))
+        (safe-assoc val seg subval))))
 
 (extend-type #+clj Number #+cljs number
     IFetch

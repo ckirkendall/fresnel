@@ -3,7 +3,7 @@
   #+clj (:use clojure.test)
   (:require [fresnel.lenses :refer [#+clj deflens #+clj deffetch #+clj defputback
                                     IFetch IPutback fetch putback create-lens slice
-                                    key]]
+                                    key dissoc-trigger]]
             [clojure.string :refer [split]]
             #+cljs [cemerick.cljs.test :as t])
   #+cljs (:require-macros [cemerick.cljs.test
@@ -164,3 +164,8 @@
            (putback {[0 1] {:a :b}} [(key [0 1]) :a] :c)))
     (is (= {[0 1] {:a :c}}
            (putback {} [(key [0 1]) :a] :c)))))
+
+(deftest dissoc-test
+  (testing "making sure that putback with the dissoc-trigger causes a dissoc of the key"
+    (is (= {:a :b}
+           (putback {:a :b :c :d} :c dissoc-trigger)))))
