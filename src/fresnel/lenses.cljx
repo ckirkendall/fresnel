@@ -26,7 +26,11 @@
     x))
 
 (defn fetch [value seg]
-  (-fetch (fetch-lens seg) value))
+  (try (-fetch seg value)
+       (catch #+clj IllegalArgumentException
+              #+cljs js/Error e
+         (fetch-lens seg)
+         (throw e))))
 
 (defn putback [value seg subvalue]
   (-putback (putback-lens seg) value subvalue))
@@ -44,30 +48,11 @@
     (assoc value seg sub-val)))
 
 
-(defn safe-nth [value seg]
-  (if (vector? value)
-    (get value seg)
-    (loop [idx 0 val value]
-      (if (or (empty? val) (>= idx seg))
-        (first val)
-        (recur (inc idx) (rest val))))))
+(defprotocol ISafeNth
+  (-safe-nth [value n]))
 
-
-(defn safe-num-assoc [value seg sub-val]
-  (cond
-    (vector? value)
-    (assoc value seg sub-val)
-
-    (map? value)
-    (safe-assoc value seg sub-val)
-
-    :else ;seq
-    (loop [idx 0 val value accum []]
-      (cond
-       (>= idx seg) (concat (conj accum sub-val) (rest val))
-       (empty? val) (recur (inc idx) val (conj accum nil))
-       :else (recur (inc idx) (rest val) (conj accum (first val)))))))
-
+(defprotocol ISafeNumAssoc
+  (-safe-num-assoc [value seg sub-val]))
 
 
 (extend-type #+clj clojure.lang.Keyword #+cljs cljs.core.Keyword
@@ -96,23 +81,65 @@
 
 (extend-type #+clj Number #+cljs number
     IFetch
-    (-fetch [seg value] (safe-nth value seg))
+    (-fetch [seg value] (-safe-nth value seg))
     IPutback
     (-putback [seg value subval]
-      (let [val (if (nil? value) {} value)]
-        (safe-num-assoc value seg subval))))
+      (let [val (if (nil? value) [] value)]
+        (-safe-num-assoc value seg subval))))
 
 (extend-type #+clj clojure.lang.PersistentVector #+cljs cljs.core/PersistentVector
     IFetch
     (-fetch [seg value] (fetch-in value seg))
     IPutback
-    (-putback [seg value subval] (putback-in value seg subval)))
+    (-putback [seg value subval] (putback-in value seg subval))
+    ISafeNth 
+    (-safe-nth [value seg] (nth value seg))
+    ISafeNumAssoc
+    (-safe-num-assoc [value seg sub-value] (assoc value seg sub-value)))
 
 (extend-type #+clj clojure.lang.PersistentList #+cljs cljs.core/List
     IFetch
     (-fetch [seg value] (fetch-in value seg))
     IPutback
     (-putback [seg value subval] (putback-in value seg subval)))
+
+(extend-type #+clj clojure.lang.PersistentArrayMap #+cljs cljs.core/PersistentArrayMap
+    ISafeNth
+    (-safe-nth [value seg] (get value seg))
+    ISafeNumAssoc
+    (-safe-num-assoc [value seg sub-value] (safe-assoc value seg sub-value)))
+
+(extend-type #+clj clojure.lang.PersistentHashMap #+cljs cljs.core/PersistentHashMap
+    ISafeNth
+    (-safe-nth [value seg] (get value seg))
+    ISafeNumAssoc
+    (-safe-num-assoc [value seg sub-value] (safe-assoc value seg sub-value)))
+
+
+(extend-type #+clj Object #+cljs object
+   ISafeNth
+   (-safe-nth [value seg]
+     (if (vector? value)
+       (get value seg)
+       (loop [idx 0 val value]
+         (if (or (empty? val) (>= idx seg))
+           (first val)
+           (recur (inc idx) (rest val))))))
+   ISafeNumAssoc 
+   (-safe-num-assoc [value seg sub-val]
+     (cond
+      (vector? value)
+      (assoc value seg sub-val)
+
+      (map? value)
+      (safe-assoc value seg sub-val)
+
+      :else ;seq
+      (loop [idx 0 val value accum []]
+        (cond
+         (>= idx seg) (concat (conj accum sub-val) (rest val))
+         (empty? val) (recur (inc idx) val (conj accum nil))
+         :else (recur (inc idx) (rest val) (conj accum (first val))))))))
 
 (defn key [ky]
   (reify

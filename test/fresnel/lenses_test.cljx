@@ -66,7 +66,8 @@
       (is (= ["a" "b" "c"] (putback data 1 "b")))))
   (testing "putback using a number on a list"
     (let [data '("a" "fail" "c")]
-      (is (= '("a" "b" "c") (putback data 1 "b")))))  (testing "putback using a custom segment"
+      (is (= '("a" "b" "c") (putback data 1 "b")))))
+  (testing "putback using a custom segment"
     (let [seg (create-lens (fn [_ data] (nth data 1))
                            (fn [_ data nval] (assoc data 1 nval)))
           data ["a" "fail" "c"]]
