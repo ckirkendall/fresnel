@@ -28,7 +28,7 @@
 (defn fetch [value seg]
   (try (-fetch seg value)
        (catch #+clj IllegalArgumentException
-              #+cljs js/Error e
+         #+cljs js/Error e
          (fetch-lens seg)
          (throw e))))
 
@@ -56,90 +56,91 @@
 
 
 (extend-type #+clj clojure.lang.Keyword #+cljs cljs.core.Keyword
-    IFetch
-    (-fetch [seg value] (get value seg))
-    IPutback
-    (-putback [seg value subval]
-      (let [val (if (nil? value) {} value)]
-        (safe-assoc val seg subval))))
+             IFetch
+             (-fetch [seg value] (get value seg))
+             IPutback
+             (-putback [seg value subval]
+               (let [val (if (nil? value) {} value)]
+                 (safe-assoc val seg subval))))
 
 (extend-type #+clj clojure.lang.Symbol #+cljs cljs.core.Symbol
-    IFetch
-    (-fetch [seg value] (get value seg))
-    IPutback
-    (-putback [seg value subval]
-      (let [val (if (nil? value) {} value)]
-        (safe-assoc val seg subval))))
+             IFetch
+             (-fetch [seg value] (get value seg))
+             IPutback
+             (-putback [seg value subval]
+               (let [val (if (nil? value) {} value)]
+                 (safe-assoc val seg subval))))
 
 (extend-type #+clj String #+cljs string
-    IFetch
-    (-fetch [seg value] (get value seg))
-    IPutback
-    (-putback [seg value subval]
-      (let [val (if (nil? value) {} value)]
-        (safe-assoc val seg subval))))
+             IFetch
+             (-fetch [seg value] (get value seg))
+             IPutback
+             (-putback [seg value subval]
+               (let [val (if (nil? value) {} value)]
+                 (safe-assoc val seg subval))))
 
 (extend-type #+clj Number #+cljs number
-    IFetch
-    (-fetch [seg value] (-safe-nth value seg))
-    IPutback
-    (-putback [seg value subval]
-      (let [val (if (nil? value) [] value)]
-        (-safe-num-assoc value seg subval))))
+             IFetch
+             (-fetch [seg value] (when (not (nil? value))
+                                   (-safe-nth value seg)))
+             IPutback
+             (-putback [seg value subval]
+               (let [val (if (nil? value) [] value)]
+                 (-safe-num-assoc value seg subval))))
 
 (extend-type #+clj clojure.lang.PersistentVector #+cljs cljs.core/PersistentVector
-    IFetch
-    (-fetch [seg value] (fetch-in value seg))
-    IPutback
-    (-putback [seg value subval] (putback-in value seg subval))
-    ISafeNth 
-    (-safe-nth [value seg] (nth value seg))
-    ISafeNumAssoc
-    (-safe-num-assoc [value seg sub-value] (assoc value seg sub-value)))
+             IFetch
+             (-fetch [seg value] (fetch-in value seg))
+             IPutback
+             (-putback [seg value subval] (putback-in value seg subval))
+             ISafeNth
+             (-safe-nth [value seg] (nth value seg))
+             ISafeNumAssoc
+             (-safe-num-assoc [value seg sub-value] (assoc value seg sub-value)))
 
 (extend-type #+clj clojure.lang.PersistentList #+cljs cljs.core/List
-    IFetch
-    (-fetch [seg value] (fetch-in value seg))
-    IPutback
-    (-putback [seg value subval] (putback-in value seg subval)))
+             IFetch
+             (-fetch [seg value] (fetch-in value seg))
+             IPutback
+             (-putback [seg value subval] (putback-in value seg subval)))
 
 (extend-type #+clj clojure.lang.PersistentArrayMap #+cljs cljs.core/PersistentArrayMap
-    ISafeNth
-    (-safe-nth [value seg] (get value seg))
-    ISafeNumAssoc
-    (-safe-num-assoc [value seg sub-value] (safe-assoc value seg sub-value)))
+             ISafeNth
+             (-safe-nth [value seg] (get value seg))
+             ISafeNumAssoc
+             (-safe-num-assoc [value seg sub-value] (safe-assoc value seg sub-value)))
 
 (extend-type #+clj clojure.lang.PersistentHashMap #+cljs cljs.core/PersistentHashMap
-    ISafeNth
-    (-safe-nth [value seg] (get value seg))
-    ISafeNumAssoc
-    (-safe-num-assoc [value seg sub-value] (safe-assoc value seg sub-value)))
+             ISafeNth
+             (-safe-nth [value seg] (get value seg))
+             ISafeNumAssoc
+             (-safe-num-assoc [value seg sub-value] (safe-assoc value seg sub-value)))
 
 
 (extend-type #+clj Object #+cljs object
-   ISafeNth
-   (-safe-nth [value seg]
-     (if (vector? value)
-       (get value seg)
-       (loop [idx 0 val value]
-         (if (or (empty? val) (>= idx seg))
-           (first val)
-           (recur (inc idx) (rest val))))))
-   ISafeNumAssoc 
-   (-safe-num-assoc [value seg sub-val]
-     (cond
-      (vector? value)
-      (assoc value seg sub-val)
+             ISafeNth
+             (-safe-nth [value seg]
+               (if (vector? value)
+                 (get value seg)
+                 (loop [idx 0 val value]
+                   (if (or (empty? val) (>= idx seg))
+                     (first val)
+                     (recur (inc idx) (rest val))))))
+             ISafeNumAssoc
+             (-safe-num-assoc [value seg sub-val]
+               (cond
+                 (vector? value)
+                 (assoc value seg sub-val)
 
-      (map? value)
-      (safe-assoc value seg sub-val)
+                 (map? value)
+                 (safe-assoc value seg sub-val)
 
-      :else ;seq
-      (loop [idx 0 val value accum []]
-        (cond
-         (>= idx seg) (concat (conj accum sub-val) (rest val))
-         (empty? val) (recur (inc idx) val (conj accum nil))
-         :else (recur (inc idx) (rest val) (conj accum (first val))))))))
+                 :else ;seq
+                 (loop [idx 0 val value accum []]
+                   (cond
+                     (>= idx seg) (concat (conj accum sub-val) (rest val))
+                     (empty? val) (recur (inc idx) val (conj accum nil))
+                     :else (recur (inc idx) (rest val) (conj accum (first val))))))))
 
 (defn key [ky]
   (reify
@@ -165,9 +166,9 @@
   (-putback [seg x v]
     (let [n (count x)]
       (-> x
-        (subvec 0 (bound 0 from n))
-        (into (if (spliceable? v) v (list v)))
-        (into (subvec x (bound 0 to n) n))))))
+          (subvec 0 (bound 0 from n))
+          (into (if (spliceable? v) v (list v)))
+          (into (subvec x (bound 0 to n) n))))))
 
 (defn slice [from to] (Slice. from to))
 
@@ -197,14 +198,14 @@
 (defn create-lens [fetch-fn putback-fn]
   {:pre [(or fetch putback)]}
   (cond
-   (and fetch-fn putback-fn)
-   (create-bi-lens fetch-fn putback-fn)
+    (and fetch-fn putback-fn)
+    (create-bi-lens fetch-fn putback-fn)
 
-   fetch-fn
-   (create-fetch-lens fetch-fn)
+    fetch-fn
+    (create-fetch-lens fetch-fn)
 
-   putback-fn
-   (create-putback-lens putback-fn)))
+    putback-fn
+    (create-putback-lens putback-fn)))
 
 
 (defmacro deffetch [name doc? initial-args & methods]
