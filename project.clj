@@ -3,35 +3,26 @@
   :url "https://github.com/ckirkendall/fresnel"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2138"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.10.520"]]
   :source-paths ["target/classes"]
   :test-paths ["target/test-classes"]
-  :profiles {:dev {:plugins [[com.keminglabs/cljx "0.3.2"]
-                             [com.cemerick/austin "0.1.3"]
-                             [com.cemerick/clojurescript.test "0.2.1"]
-                             [lein-cljsbuild "1.0.2"]]
-                   :hooks [cljx.hooks]
-                   :cljx {:builds [{:source-paths ["src"]
-                                    :output-path "target/classes"
-                                    :rules :clj}
-                                   {:source-paths ["src"]
-                                    :output-path "target/classes"
-                                    :rules :cljs}
-                                   {:source-paths ["test"]
-                                    :output-path "target/test-classes"
-                                    :rules :clj}
-                                   {:source-paths ["test"]
-                                    :output-path "target/test-classes"
-                                    :rules :cljs}]}
-                   :cljsbuild {:builds [{
-                               :source-paths ["target/classes" "target/test-classes"]
-                               :compiler {
-                                          :output-to "target/main.js" 
-                                          :optimizations :whitespace
-                                          :pretty-print true}
-                                         }]
-                               :test-commands {"unit-tests" ["phantomjs"
-                                                             :runner
-                                                             "target/main.js"]}}}})
-
+  :doo {:build "test"
+        :alias {:default [:node]}}
+  :profiles {:dev {:dependencies [[lein-doo "0.1.10"]]
+                   :plugins [[lein-cljsbuild "1.1.7"]
+                             [lein-doo "0.1.10"]]
+                   :cljsbuild {:builds [{:id "dev"
+                                         :source-paths ["src" "test"]
+                                         :compiler {:main          fresnel.runner
+                                                    :output-to "target/main.js"
+                                                    :optimizations :whitespace
+                                                    :pretty-print true}}
+                                        {:id "test"
+                                         :source-paths ["src" "test"]
+                                         :compiler {:main          fresnel.runner
+                                                    :output-to     "target/doo/test.js"
+                                                    :output-dir    "target/doo/out"
+                                                    :target        :nodejs
+                                                    :language-in   :ecmascript5
+                                                    :optimizations :none}}]}}})
