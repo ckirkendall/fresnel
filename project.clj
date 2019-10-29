@@ -5,8 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.520"]]
-  :source-paths ["target/classes"]
-  :test-paths ["target/test-classes"]
+  :source-paths ["src"]
+  :test-paths ["src" "test"]
   :doo {:build "test"
         :alias {:default [:node]}}
   :profiles {:dev {:dependencies [[lein-doo "0.1.10"]]
