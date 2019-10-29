@@ -1,10 +1,11 @@
-(defproject fresnel "0.3.1-SNAPSHOT"
+(defproject fresnel "0.3.1"
   :description "A library for composing lenses and working with complex state objects"
   :url "https://github.com/ckirkendall/fresnel"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.520"]]
+  :plugins [[lein-shell "0.5.0"]]
   :source-paths ["src"]
   :test-paths ["src" "test"]
   :doo {:build "test"
