@@ -9,6 +9,19 @@
   :test-paths ["src" "test"]
   :doo {:build "test"
         :alias {:default [:node]}}
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version" "leiningen.release/bump-version" "release"]
+                  ["shell" "echo" "bumped version"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag" "v" "--no-sign"] ; disable signing and add "v" prefix
+                  ["shell" "echo" "tagged version"]
+                  ["deploy" "clojars"]
+                  ["shell" "echo" "deployed"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["shell" "echo" "bump version back to snapshot"]
+                  ["vcs" "push"]
+                  ["shell" "echo" "pushed"]]
   :profiles {:dev {:dependencies [[lein-doo "0.1.10"]]
                    :plugins [[lein-cljsbuild "1.1.7"]
                              [lein-doo "0.1.10"]]
